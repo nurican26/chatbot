@@ -5504,6 +5504,52 @@ if is_admin:
 
         st.divider()
 
+        st.subheader("📌 Takipçi / Göstermelik Yönetimi")
+
+        _tk_simdi = takipci_sayisi()
+        _tk_hedef = st.number_input(
+            "Takipçi sayısı (görünen)",
+            min_value=0,
+            max_value=20000,
+            value=int(_tk_simdi),
+            step=10,
+            key="yon_tk_sayi_sidebar",
+        )
+        if st.button(
+            "💾 Takipçi Sayısını Uygula",
+            key="yon_tk_uygula_sidebar",
+            use_container_width=True,
+        ):
+            _tk_yeni = takipci_sayi_ayarla(int(_tk_hedef))
+            st.success(f"Takipçi {_tk_simdi} → {_tk_yeni} ✓")
+            st.rerun()
+
+        if st.button(
+            "👤 10 Göstermelik Üye Yükle",
+            key="yon_gos_uyeler_sidebar",
+            use_container_width=True,
+        ):
+            _ek = 0
+            for _gad in [
+                "Mehmet K.",
+                "Ayşe D.",
+                "Emre T.",
+                "Zeynep A.",
+                "Kaan B.",
+                "Elif S.",
+                "Mert G.",
+                "Derya Y.",
+                "Cem K.",
+                "Buse N.",
+            ]:
+                if uye_kayit(_gad, "bta12345") == "OK":
+                    _ek += 1
+            st.success(f"{_ek} göstermelik üye kaydı oluşturuldu ✓")
+            st.rerun()
+        st.caption("Göstermelik üye şifresi: bta12345")
+
+        st.divider()
+
         st.subheader("📩 Yöneticinin Özel Mesaj Kutusu (DM)")
 
         _dmlar = yonetici_mesajlarini_oku()
