@@ -3546,6 +3546,40 @@ def takip_birak(oturum):
     return True
 
 
+def takipci_sayi_ayarla(hedef):
+    """Takipçi kayıt sayısını hedef değere ayarlar. Gerçek takipleri
+    korur; eksik kalan kısmı 'gos-' önekli göstermelik oturumlarla
+    tamamlar, fazla olan göstermelik kayıtları siler."""
+    hedef = max(0, int(hedef))
+    try:
+        _df = pd.read_csv(
+            TAKIP_DOSYASI, dtype=str, encoding="utf-8-sig"
+        ).fillna("")
+    except Exception:
+        _df = pd.DataFrame(columns=["oturum", "kullanici", "tarih"])
+    _mevcut = [
+        str(x).strip()
+        for x in _df["oturum"].fillna("").tolist()
+        if str(x).strip()
+    ]
+    _gercek = [o for o in _mevcut if not o.startswith("gos-")]
+    if len(_gercek) >= hedef:
+        _secili = _gercek[:hedef]
+    else:
+        _secili = _gercek + [
+            "gos-" + uuid.uuid4().hex for _ in range(hedef - len(_gercek))
+        ]
+    _secili = list(dict.fromkeys(_secili))
+    pd.DataFrame(
+        {
+            "oturum": _secili,
+            "kullanici": "",
+            "tarih": turkiye_saati().strftime("%Y-%m-%d %H:%M"),
+        }
+    ).to_csv(TAKIP_DOSYASI, index=False, encoding="utf-8-sig")
+    return len(_secili)
+
+
 # ==================================================
 # YÖNETİCİYE ÖZEL MESAJ (DM) FONKSİYONLARI
 # ==================================================
@@ -8103,6 +8137,52 @@ with tab_takip:
                         st.rerun()
                     else:
                         st.error("İptal sırasında sorun oluştu.")
+
+            st.divider()
+            st.markdown("**📌 Takipçi / Göstermelik Yönetimi**")
+            _tk_simdi = takipci_sayisi()
+            _tk_hedef = st.number_input(
+                "Takipçi sayısı (görünen)",
+                min_value=0,
+                max_value=20000,
+                value=int(_tk_simdi),
+                step=10,
+                key="yon_tk_sayi",
+            )
+            if st.button(
+                "💾 Takipçi Sayısını Uygula",
+                key="yon_tk_uygula",
+                use_container_width=True,
+            ):
+                _tk_yeni = takipci_sayi_ayarla(int(_tk_hedef))
+                st.success(
+                    f"Takipçi sayısı {_tk_simdi} → {_tk_yeni} olarak ayarlandı ✓"
+                )
+                st.rerun()
+
+            if st.button(
+                "👤 10 Göstermelik Üye Yükle (otomatik isim)",
+                key="yon_gos_uyeler",
+                use_container_width=True,
+            ):
+                _ek = 0
+                for _gad in [
+                    "Mehmet K.",
+                    "Ayşe D.",
+                    "Emre T.",
+                    "Zeynep A.",
+                    "Kaan B.",
+                    "Elif S.",
+                    "Mert G.",
+                    "Derya Y.",
+                    "Cem K.",
+                    "Buse N.",
+                ]:
+                    if uye_kayit(_gad, "bta12345") == "OK":
+                        _ek += 1
+                st.success(f"{_ek} göstermelik üye kaydı oluşturuldu ✓")
+                st.rerun()
+            st.caption("Göstermelik üyelerin şifresi: bta12345")
 
     with st.expander(
         f"👥 Üyeler ({len(uye_listesi_nickler())})", expanded=False
